@@ -1,0 +1,17 @@
+# Core HTTP / API
+requests>=2.31.0
+
+# Embeddings
+sentence-transformers>=2.6.1
+numpy>=1.26.0
+
+# Vector search
+faiss-cpu>=1.8.0
+
+# Async browser automation (used by pyppeteer)
+pyppeteer>=1.0.2
+aiohttp>=3.9.0
+
+Flask
+
+python-dotenv
