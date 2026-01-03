@@ -1,3 +1,4 @@
 /.env
 *.pkl
 *.index
+*.cpython-313.pyc
