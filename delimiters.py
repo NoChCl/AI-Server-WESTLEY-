@@ -1,5 +1,6 @@
 import asyncio
 from pyppeteer import launch
+from weather import *
 
 
 def isDeliniated(text):
@@ -11,34 +12,34 @@ def isDeliniated(text):
 
 
 def getDelimitors():
-	d=""
-	
-	d+='''
+    d=""
+    
+    d+='''
 If additional information is required to answer the question, you may search the internet.  
 To request a search, use the delimiters with the ACTION_NAME being "Search".
 The action_input should be the exact query you want to look up.'''
-	
-	d+='''
+    
+    d+='''
 If you would like to use more reasoning and have longer and more of a chance to ponder before outputing a final answer, you may do so.
 To do so, use the delimiters with the ACTION_NAME being "Think".
 Delimiters must have a action_input so we will have that be "None".
 The full implemetation should be "<<< Think: None >>>" followed by whatever reasoning reqired.'''
-	
-	d+='''
-You have the ability to check the weather.
+    
+    d+='''
+You have the ability to check the weather and forcase.
 To do so, use the delimiters with the ACTION_NAME being "Weather".
-The action_input should be the location you are requesting weather for.
+The action_input should specify weather you want "Current" or "Forecast" (this is the Type), followed by the location you are requesting weather for.
 The action_input by default asumes the location is in the United States.
-The action_input should be structured in a format of "Town, State", and seperated by a comma.
-If you need weather for a location outside the United States, you say it in the form of "Town, State, Country"'''
-	
-	
-	d+="""
+The action_input should be structured in a format of "Type - Town, State", and seperated by a comma.
+If you need weather for a location outside the United States, you say it in the form of "Type - Town, State, Country"'''
+    
+    
+    d+="""
 If image generation is required, you can do so.  
 To request image generation, use the delimiters with the ACTION_NAME being "Image".
 The action_input should be the exact discription of the image you would like to generate."""
-	
-	return d
+    
+    return d
 
 
 
@@ -56,17 +57,21 @@ def delimiterLogic(message):
     
     if action == "Search":
         #this is where to handle search
+        print("Calling Search delimiter")
         return f"{action} Module is currently unavalible.\nWESTLEY Thinking:\n{thoughts}"
     elif action == "Image":
+        print("Calling Image delimiter")
         #this is where to handle image gen
         return f"{action} Module is currently unavalible.\nWESTLEY Thinking:\n{thoughts}"
     elif action == "Weather":
         #this is where to handle search
-        return f"{action} Module is currently unavalible.\nWESTLEY Thinking:\n{thoughts}"
+        print("Calling Weather delimiter")
+        weatherOut=getWeather(paramaters)
+        return f"Weather Module:\n{weatherOut}.\nWESTLEY Thinking:\n{thoughts}"
     elif action == "Think":
         return f"WESTLEY Thinking:\n{thoughts}"
     else:
-        return f"{action} Module is currently unavalible.\nWESTLEY Thinking:\n{thoughts}"
+        return f"{action} Module does not exist! If you think this function could be of consistant use, ask the user for it to be implemented.\nWESTLEY Thinking:\n{thoughts}"
 
 
 
@@ -158,22 +163,5 @@ def handleSearch(query):
 
 
 #IMAGE
-
-
-
-
-
-
-#WEATHER
-
-
-
-
-
-
-
-
-
-
 
 

@@ -9,8 +9,7 @@ HEADERS = {
 }
 
 
-print(key)
-BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
+BASE_URL = "https://api.openweathermap.org/data/2.5/"
 
 
 
@@ -41,9 +40,18 @@ def getCoordinates(locationString):
     return float(data[0]["lat"]), float(data[0]["lon"])
 
 
-def getWeather(locationString):
+def getWeather(paramators):
+    
+    request, locationString = paramators.split(" - ")
+    
     lat, lon = getCoordinates(locationString)
-
+    
+    if request.lower() == "current":
+        url=f"{BASE_URL}weather"
+    elif request.lower() == "forecast":
+        url=f"{BASE_URL}forecast"
+    else: return f'Error in "Type" paramator, {request} is not a valid type.'
+    
     params = {
         "lat": lat,
         "lon": lon,
@@ -51,19 +59,51 @@ def getWeather(locationString):
         "units": "imperial"
     }
 
-    r = requests.get(BASE_URL, params=params)
+    r = requests.get(url, params=params)
     r.raise_for_status()
     data = r.json()
     
-    return data
-    # Normalize output (important!)
-    return {
-        "location": locationString,
-        "temp": data["main"]["temp"],
-        "feelsLike": data["main"]["feels_like"],
-        "condition": data["weather"][0]["description"],
-        "windMph": data["wind"]["speed"]
-    }
+    return parser(data)
 
 
-print(getWeather(input("enter town, city, country")))
+
+def parser(data, indent=0):
+    """
+    Recursively prints nested JSON-like structures.
+    - data: dict | list | primitive
+    - indent: current indentation level
+    - maxDepth: optional safety limit
+    """
+    
+    txt=""
+    prefix = " " * indent
+
+    if isinstance(data, dict):
+        for key, value in data.items():
+            txt+=f"{prefix}{key}:\n"
+            txt+=parser(value, indent + 2)
+
+    elif isinstance(data, list):
+        for i, item in enumerate(data):
+            txt+=f"{prefix}[{i}]\n"
+            txt+=parser(item, indent + 2)
+
+    else:
+        txt+=f"{prefix}{data}\n"
+    return txt
+
+
+if __name__ == "__main__":
+    '''
+    e=input("Enter 1 for weather, \nAnd 2 for forecast: ")
+    
+    if e=="1":
+        x="weather"
+    elif e == "2":
+        x="forecast"
+        
+    x+=" - "
+    
+    x+=input("Enter town, city, country: ")
+    '''
+    print(getWeather("Current - New York, NY"))

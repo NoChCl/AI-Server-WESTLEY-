@@ -56,9 +56,10 @@ All questions must be answer truthfully and to the best of your knowlage.
 If you are ever unsure about any information, respond with "I don't know".
 
 You may request external actions at any point in a response using a dedicated escape delimiter in the form of <<< ACTION_NAME: action_input >>>.
-Text before the delimiters is normal, user-visible output.
+Text before the delimiters is the only text that is user-visible output.
 Text inside is strictly read by the action being preformed.
-Text on the tail end can be used for writing notes to yourself to clarify reasoning for action or giving extra context.
+Text on the tail end is to be used for writing notes to yourself to clarify reasoning for action or giving extra context.
+Try to answer any response in as few calls to external tools as possible.
 
 Bellow is a list of functions avalible that use the delimiters discribed above:
 
@@ -102,6 +103,8 @@ def getResponse(fullPrompt, model="qwen2.5:14b"):
     return response
     
 def proccesing(responseObj, personality, context, prompt, personalityName, model, fm=""):
+    mt=""
+    yield mt.encode('utf-8')
     fullMessage = ""
     delimited = False
     for line in responseObj.iter_lines():
@@ -113,7 +116,12 @@ def proccesing(responseObj, personality, context, prompt, personalityName, model
             
             fullMessage += content
             
-            if isDeliniated(fullMessage):
+            
+            if delimited:
+                yield mt.encode('utf-8')
+                continue
+
+            elif isDeliniated(fullMessage):
                 delimited=True
                 yield content.split("<<<")[0].encode('utf-8')
                 
@@ -135,6 +143,7 @@ def proccesing(responseObj, personality, context, prompt, personalityName, model
         
         fm+=f"\n{fullMessage}"
         
+        yield mt.encode('utf-8')
         yield from proccesing(responseObj, personality, context, prompt, personalityName, model, fm)
     else:
         fm+=f"\n{fullMessage}"
