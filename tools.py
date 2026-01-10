@@ -81,7 +81,7 @@ WESTLEY: """
 
 
 def getResponse(fullPrompt, model="qwen2.5:14b"):
-    print("Getting Response")
+    
 
     for i in range(10):
         # Send request to Ollama
@@ -122,6 +122,7 @@ def proccesing(responseObj, personality, context, prompt, personalityName, model
                 continue
 
             elif isDeliniated(fullMessage):
+                print("Response Delimited")
                 delimited=True
                 yield content.split("<<<")[0].encode('utf-8')
                 
@@ -139,6 +140,9 @@ def proccesing(responseObj, personality, context, prompt, personalityName, model
         context+=f"WESTLEY: {userOutput}\n"
         context+=f"{delimiterOutput}\n"
         
+        fm+=f"\n{delimiterOutput}"
+        
+        print("Delimiter Complete, Getting New Response")
         responseObj = getResponse(getFullPrompt(personality, context, prompt), model)
         
         fm+=f"\n{fullMessage}"

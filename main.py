@@ -8,6 +8,9 @@ app = Flask(__name__)
 
 @app.route("/process", methods=["POST"])
 def process_message():
+    
+    print("Receved Message")
+    
     """
     Receives a JSON payload like:
     {
@@ -36,7 +39,7 @@ def process_message():
     
     context = getContext(prompt, personalityName)
     
-    
+    print("Getting Response")
     responseObj = getResponse(getFullPrompt(personality, context, prompt), model)
 
     print("Received Response Object")

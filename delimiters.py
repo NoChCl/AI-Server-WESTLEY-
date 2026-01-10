@@ -1,6 +1,6 @@
-import asyncio
-from pyppeteer import launch
+from web import *
 from weather import *
+import asyncio
 
 
 def isDeliniated(text):
@@ -44,6 +44,7 @@ The action_input should be the exact discription of the image you would like to 
 
 
 def delimiterLogic(message):
+    print("Proccessing Delimiter")
     #this is text that was already output to user, which would be before the delimiter
     output=message.split("<<<")[0]
     
@@ -57,106 +58,28 @@ def delimiterLogic(message):
     
     if action == "Search":
         #this is where to handle search
-        print("Calling Search delimiter")
-        return f"{action} Module is currently unavalible.\nWESTLEY Thinking:\n{thoughts}"
+        print("Calling Search Delimiter")
+        searchOut=asyncio.run(search(paramaters))
+        return f"Search Module: {searchOut}\nWESTLEY Thinking:\n{thoughts}"
     elif action == "Image":
-        print("Calling Image delimiter")
+        print("Calling Image Delimiter")
         #this is where to handle image gen
         return f"{action} Module is currently unavalible.\nWESTLEY Thinking:\n{thoughts}"
     elif action == "Weather":
         #this is where to handle search
-        print("Calling Weather delimiter")
+        print("Calling Weather Delimiter")
         weatherOut=getWeather(paramaters)
         return f"Weather Module:\n{weatherOut}.\nWESTLEY Thinking:\n{thoughts}"
     elif action == "Think":
+		print("Think Delimiter")
         return f"WESTLEY Thinking:\n{thoughts}"
     else:
+		print(f"Invald Delimiter {action} called with paramaters {paramaters}")
         return f"{action} Module does not exist! If you think this function could be of consistant use, ask the user for it to be implemented.\nWESTLEY Thinking:\n{thoughts}"
 
 
 
 #SEARCH
-
-
-def doSearch(firstChunk, responseObj, prompt, context, personality, model="qwen2.5:14b"):
-    interaction = getFullPrompt(personality, context, prompt)
-    
-    while True:
-        fullMessage = firstChunk
-        for line in responseObj.iter_lines():
-            if not line:
-                continue
-            chunk = line.decode("utf-8").removeprefix("data: ").strip()
-            if not chunk or chunk == "[DONE]":
-                continue
-            content = json.loads(chunk)["choices"][0]["text"]
-            fullMessage += content
-        
-        interaction+=fullMessage
-        
-        query = fullMessage[len("Search"):].strip()
-        print(f"WESTLEY requested search: {query}")
-        searchResults = handleSearch(query)
-        
-        interaction +="\nSearch: "+searchResults
-        
-        responseObj = getResponse(interaction, model)
-        
-        isSearch, firstChunk = requestSearch(responseObj)
-        
-        if not isSearch:
-            break
-        
-        
-    return firstChunk, responseObj
-    
-    
-async def performSearch(query, max_results=5):
-    """
-    Launches a headless browser and searches DuckDuckGo for the query.
-    Returns a list of result dictionaries with title, link, and snippet.
-    """
-    browser = await launch(headless=True, args=["--no-sandbox"])
-    page = await browser.newPage()
-    await page.goto(f"https://duckduckgo.com/?q={query}")
-
-    # Wait until results are loaded
-    await page.waitForSelector(".result__a", timeout=8000)
-
-    results = await page.evaluate(f"""() => {{
-        const items = Array.from(document.querySelectorAll('.result'));
-        return items.slice(0, {max_results}).map(item => {{
-            const title = item.querySelector('.result__a')?.innerText || '';
-            const link = item.querySelector('.result__a')?.href || '';
-            const snippet = item.querySelector('.result__snippet')?.innerText || '';
-            return {{ title, link, snippet }};
-        }});
-    }}""")
-
-    await browser.close()
-    return results
-
-
-def handleSearch(query):
-    """
-    Called by doSearch(). Performs a live internet search and returns formatted text.
-    """
-    try:
-        results = asyncio.get_event_loop().run_until_complete(performSearch(query))
-    except RuntimeError:
-        # In case event loop is already running (e.g., inside async environment)
-        results = asyncio.run(performSearch(query))
-    except Exception as e:
-        return f"Search failed: {e}"
-
-    if not results:
-        return "No results found."
-
-    formatted = []
-    for r in results:
-        formatted.append(f"{r['title']}\n{r['snippet']}\n{r['link']}")
-    return "\n\n".join(formatted)
-    
 
 
 
