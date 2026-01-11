@@ -137,6 +137,9 @@ async def visitSite(url, manageBrowser=True):
 
     return result
 
+
+
+
 async def main():
     results = await search(input("Search: "))
     

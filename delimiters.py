@@ -18,6 +18,11 @@ def getDelimitors():
 If additional information is required to answer the question, you may search the internet.  
 To request a search, use the delimiters with the ACTION_NAME being "Search".
 The action_input should be the exact query you want to look up.'''
+
+    d+='''
+If you need to visit a specific site in particulalar, you have the ability to do so.  
+To visit a site, use the delimiters with the ACTION_NAME being "Visit Site".
+The action_input should be the exact url to the page you with to visit.'''
     
     d+='''
 If you would like to use more reasoning and have longer and more of a chance to ponder before outputing a final answer, you may do so.
@@ -33,11 +38,7 @@ The action_input by default asumes the location is in the United States.
 The action_input should be structured in a format of "Type - Town, State", and seperated by a comma.
 If you need weather for a location outside the United States, you say it in the form of "Type - Town, State, Country"'''
     
-    
-    d+="""
-If image generation is required, you can do so.  
-To request image generation, use the delimiters with the ACTION_NAME being "Image".
-The action_input should be the exact discription of the image you would like to generate."""
+   
     
     return d
 
@@ -61,20 +62,23 @@ def delimiterLogic(message):
         print("Calling Search Delimiter")
         searchOut=asyncio.run(search(paramaters))
         return f"Search Module: {searchOut}\nWESTLEY Thinking:\n{thoughts}"
-    elif action == "Image":
-        print("Calling Image Delimiter")
-        #this is where to handle image gen
-        return f"{action} Module is currently unavalible.\nWESTLEY Thinking:\n{thoughts}"
+    elif action == "Visit Site":
+        #this is where to handle site visiting
+        print("Calling Visit Site Delimiter")
+        siteJson=asyncio.run(visitSite(paramaters))
+        if "error" in siteJson:
+            return f"Visit Site {siteJson['url']}: Error: {siteJson['error']}\nWESTLEY Thinking:\n{thoughts}"
+        return f"{siteJson['url']}: {siteJson['content']}\nWESTLEY Thinking:\n{thoughts}"
     elif action == "Weather":
         #this is where to handle search
         print("Calling Weather Delimiter")
         weatherOut=getWeather(paramaters)
         return f"Weather Module:\n{weatherOut}.\nWESTLEY Thinking:\n{thoughts}"
     elif action == "Think":
-		print("Think Delimiter")
+        print("Think Delimiter")
         return f"WESTLEY Thinking:\n{thoughts}"
     else:
-		print(f"Invald Delimiter {action} called with paramaters {paramaters}")
+        print(f"Invald Delimiter {action} called with paramaters {paramaters}")
         return f"{action} Module does not exist! If you think this function could be of consistant use, ask the user for it to be implemented.\nWESTLEY Thinking:\n{thoughts}"
 
 

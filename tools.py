@@ -79,6 +79,50 @@ User: {prompt}
 WESTLEY: """
 
 
+def getFullPromptDelimiter(personality, context, prompt, answerHistory):
+    
+    return f"""
+{personality}
+
+All questions must be answer truthfully and to the best of your knowlage.
+If you are ever unsure about any information, respond with "I don't know".
+
+You may request external actions at any point in a response using a dedicated escape delimiter in the form of <<< ACTION_NAME: action_input >>>.
+Text before the delimiters is the only text that is user-visible output.
+Text inside is strictly read by the action being preformed.
+Text on the tail end is to be used for writing notes to yourself to clarify reasoning for action or giving extra context.
+Try to answer any response in as few calls to external tools as possible.
+
+Bellow is a list of functions avalible that use the delimiters discribed above:
+
+{getDelimitors()}
+
+End delimited functions list.
+
+Use the following conversation history to guide your response. If a question asks about past messages,
+you may only reference this transcript. If the information isn't there, respond with:
+"I don’t know based on the transcript."
+
+=== BEGIN TRANSCRIPT ===
+{context}
+=== END TRANSCRIPT ===
+
+
+Bellow is the USER PROMPT, your primary objective is to answer to the best of your abilitys, the following prompt.
+User: {prompt}
+
+Use the following answer history to continue answering the current prompt.
+Anything in this space is based on the current prompt which is mentioned above.
+This space will include firstly what you responded to the user with, followed by the delimiter you called, and finaly any relevant conclusions or assumptions derived previously.
+In the case where multiple delimiters were called, they will be the same order, however one entire itteration followed by the next, going from oldest to youngest.
+
+=== BEGIN ANSWER HISTORY ===
+{answerHistory}
+=== END ANSWER HISTORY ===
+
+WESTLEY: """
+
+
 
 def getResponse(fullPrompt, model="qwen2.5:14b"):
     
@@ -102,7 +146,7 @@ def getResponse(fullPrompt, model="qwen2.5:14b"):
 
     return response
     
-def proccesing(responseObj, personality, context, prompt, personalityName, model, fm=""):
+def proccesing(responseObj, personality, context, prompt, personalityName, model, fm="", answerHistory = ""):
     mt=""
     yield mt.encode('utf-8')
     fullMessage = ""
@@ -137,18 +181,18 @@ def proccesing(responseObj, personality, context, prompt, personalityName, model
         
         delimiterOutput = delimiterLogic(fullMessage)
         
-        context+=f"WESTLEY: {userOutput}\n"
-        context+=f"{delimiterOutput}\n"
+        answerHistory+=f"WESTLEY: {userOutput}\n"
+        answerHistory+=f"{delimiterOutput}\n"
         
         fm+=f"\n{delimiterOutput}"
         
         print("Delimiter Complete, Getting New Response")
-        responseObj = getResponse(getFullPrompt(personality, context, prompt), model)
+        responseObj = getResponse(getFullPromptDelimiter(personality, context, prompt, answerHistory), model)
         
         fm+=f"\n{fullMessage}"
         
         yield mt.encode('utf-8')
-        yield from proccesing(responseObj, personality, context, prompt, personalityName, model, fm)
+        yield from proccesing(responseObj, personality, context, prompt, personalityName, model, fm, answerHistory)
     else:
         fm+=f"\n{fullMessage}"
         print("Saving History")
