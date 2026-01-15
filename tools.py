@@ -10,7 +10,16 @@ OLLAMA_URL = "http://localhost:11434"
 embedModel = SentenceTransformer("all-MiniLM-L6-v2")
 dimension = 384  # embedding size for MiniLM
 
-
+def handleCLI(data):
+	# Validate the required fields
+    required_fields = ["model", "prompt", "personality", "personalityName"]
+    for field in required_fields:
+        if field not in data:
+            return {"error": f"Missing field '{field}'"}
+    
+    
+    # Extract data
+    return data
 
 def getContext(currentUserPrompt, personalityName, topK=5):
     print("Getting Relevent Context")

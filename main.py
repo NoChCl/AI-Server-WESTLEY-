@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 @app.route("/process", methods=["POST"])
 def process_message():
-    
+    model="qwen2.5:14b"
     print("Receved Message")
     
     """
@@ -21,15 +21,19 @@ def process_message():
     }
     Passes it to processing logic and returns a response immediately.
     """
-    data = request.json
+    
+    rawJson = request.json
+    
+    if not isinstance(rawJson, dict):
+        return jsonify({"error": "Invalid or missing JSON body"}), 400
+    
+    if rawJson.get("interface") == "CLI":
+        data = handleCLI(request.json)
+    else:
+        data = {"error": "Unknown or missing field 'interface'"}
 
-    # Validate the required fields
-    required_fields = ["model", "prompt", "personality", "personalityName"]
-    for field in required_fields:
-        if field not in data:
-            return jsonify({"error": f"Missing field '{field}'"}), 400
-            
-    model="qwen2.5:14b"
+    if "error" in data:
+        return jsonify(data), 400
     
     # Extract data
     model = data["model"]
