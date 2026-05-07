@@ -43,14 +43,10 @@ def process_message():
     
     context = getContext(prompt, personalityName)
     
-    print("Getting Response")
-    responseObj = getResponse(getFullPrompt(personality, context, prompt), model)
-
-    print("Received Response Object")
     
         
     print("Streaming Response")
-    return Response(proccesing(responseObj, personality, context, prompt, personalityName, model), mimetype="text/plain", direct_passthrough=True)
+    return Response(proccesing(personality, context, prompt, personalityName, model), mimetype="text/plain", direct_passthrough=True)
 
     
 
