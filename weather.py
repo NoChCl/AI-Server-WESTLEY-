@@ -59,7 +59,10 @@ def getWeather(paramators):
         "units": "imperial"
     }
 
-    r = requests.get(url, params=params)
+    r = requests.get(url,
+        params=params,
+        timeout=10
+    )
     r.raise_for_status()
     data = r.json()
     

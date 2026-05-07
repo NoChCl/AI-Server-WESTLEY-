@@ -146,9 +146,15 @@ def getResponse(fullPrompt, model="qwen3:8b"):
             "model": model,
             "prompt": fullPrompt,
             "stream": True
-        }        
-        response = requests.post(f"{OLLAMA_URL}/v1/completions", json=payload, stream=True)
-                
+        }
+        
+        
+        try:
+            response = requests.post(f"{OLLAMA_URL}/v1/completions", json=payload, stream=True)
+        except requests.exceptions.RequestException as e:
+            print("Ollama error:", e)
+            return ''
+        
         if response is None:
             if i == 9:
                 print("WESTLEY: Something went wrong, please try again later.")
