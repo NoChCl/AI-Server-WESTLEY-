@@ -14,7 +14,9 @@ payload = {
     "model": "qwen2.5:14b",
     "prompt": prompt,
     "personality": personality,
-    "personalityName": "test"
+    "personalityName": "test",
+	"interface": "CLI"
+
 }
 
 with requests.post(url, json=payload, stream=True) as r:
