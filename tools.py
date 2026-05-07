@@ -159,10 +159,12 @@ def getResponse(fullPrompt, model="qwen2.5:14b"):
 
     return response
     
-def proccesing(personality, context, prompt, personalityName, model, fm="", answerHistory = ""):
+def proccesing(personality, context, prompt, personalityName, model, answerHistory = ""):
     
     print("Getting Response")
     responseObj = getResponse(getFullPrompt(personality, context, prompt), model)
+    
+    fm=""
     
     yield b""
         
@@ -170,32 +172,31 @@ def proccesing(personality, context, prompt, personalityName, model, fm="", answ
         fullMessage = ""
         sentVisibleLength = 0
         delimited = False
-        
         for line in responseObj.iter_lines():
             if not line:
-				continue
-				
-			chunk = line.decode('utf-8').removeprefix('data: ')
-			
-			if not chunk or chunk == "[DONE]":
-				continue
-				
-			content = json.loads(chunk)["choices"][0]["text"]
-			
-			fullMessage += content
-			
-			
-			if delimited:
-				yield b""
-				continue
+                continue
+                
+            chunk = line.decode('utf-8').removeprefix('data: ')
+            
+            if not chunk or chunk == "[DONE]":
+                continue
+                
+            content = json.loads(chunk)["choices"][0]["text"]
+            
+            fullMessage += content
+            
+            
+            if delimited:
+                yield b""
+                continue
 
-			elif isDeliniated(fullMessage):
-				print("Response Delimited")
-				delimited=True
-				yield content.split("<<<")[0].encode('utf-8')
-				
-					
-			else: yield content.encode('utf-8')  # <-- encode to bytes
+            elif isDeliniated(fullMessage):
+                print("Response Delimited")
+                delimited=True
+                yield content.split("<<<")[0].encode('utf-8')
+                
+                    
+            else: yield content.encode('utf-8')  # <-- encode to bytes
                     
                 
                 
@@ -208,12 +209,12 @@ def proccesing(personality, context, prompt, personalityName, model, fm="", answ
             answerHistory+=f"WESTLEY: {userOutput}\n"
             answerHistory+=f"{delimiterOutput}\n"
             
-            fm+=f"\n{delimiterOutput}"
+            fm += f"\n{userOutput}\n{delimiterOutput}"
+
             
             print("Delimiter Complete, Getting New Response")
             responseObj = getResponse(getFullPromptDelimiter(personality, context, prompt, answerHistory), model)
             
-            fm+=f"\n{fullMessage}"
             
             yield b""
         else:
