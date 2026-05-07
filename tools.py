@@ -137,7 +137,7 @@ WESTLEY: """
 
 
 
-def getResponse(fullPrompt, model="qwen2.5:14b"):
+def getResponse(fullPrompt, model="qwen3:8b"):
     
 
     for i in range(10):
