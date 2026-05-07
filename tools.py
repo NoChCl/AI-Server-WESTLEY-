@@ -11,7 +11,7 @@ embedModel = SentenceTransformer("all-MiniLM-L6-v2")
 dimension = 384  # embedding size for MiniLM
 
 def handleCLI(data):
-	# Validate the required fields
+    # Validate the required fields
     required_fields = ["model", "prompt", "personality", "personalityName"]
     for field in required_fields:
         if field not in data:
@@ -22,7 +22,7 @@ def handleCLI(data):
     return data
     
 def handleAudio(data):
-	pass
+    pass
     #return data
 
 def getContext(currentUserPrompt, personalityName, topK=5):
@@ -151,7 +151,7 @@ def getResponse(fullPrompt, model="qwen2.5:14b"):
                 
         if response is None:
             if i == 9:
-                print("WESTLEY: Something went wrong, please try again.")
+                print("WESTLEY: Something went wrong, please try again later.")
                 return ""
             print("WESTLEY: Something went wrong, atempting again.")
         else:
@@ -160,65 +160,68 @@ def getResponse(fullPrompt, model="qwen2.5:14b"):
     return response
     
 def proccesing(personality, context, prompt, personalityName, model, fm="", answerHistory = ""):
-	
-	print("Getting Response")
+    
+    print("Getting Response")
     responseObj = getResponse(getFullPrompt(personality, context, prompt), model)
-	
-    mt=""
-    yield mt.encode('utf-8')
     
-    run=True
-    
-    while run:
-		fullMessage = ""
-		delimited = False
-		for line in responseObj.iter_lines():
-			if line:
-				chunk = line.decode('utf-8').removeprefix('data: ')
-				if not chunk or chunk == "[DONE]":
-					continue
-				content = json.loads(chunk)["choices"][0]["text"]
+    yield b""
+        
+    while True:
+        fullMessage = ""
+        sentVisibleLength = 0
+        delimited = False
+        
+        for line in responseObj.iter_lines():
+            if not line:
+				continue
 				
-				fullMessage += content
+			chunk = line.decode('utf-8').removeprefix('data: ')
+			
+			if not chunk or chunk == "[DONE]":
+				continue
 				
-				
-				if delimited:
-					yield mt.encode('utf-8')
-					continue
+			content = json.loads(chunk)["choices"][0]["text"]
+			
+			fullMessage += content
+			
+			
+			if delimited:
+				yield b""
+				continue
 
-				elif isDeliniated(fullMessage):
-					print("Response Delimited")
-					delimited=True
-					yield content.split("<<<")[0].encode('utf-8')
-					
-						
-				else: yield content.encode('utf-8')  # <-- encode to bytes
-					
+			elif isDeliniated(fullMessage):
+				print("Response Delimited")
+				delimited=True
+				yield content.split("<<<")[0].encode('utf-8')
 				
-				
-		if delimited:
-			
-			userOutput=fullMessage.split("<<<")[0]
-			
-			delimiterOutput = delimiterLogic(fullMessage)
-			
-			answerHistory+=f"WESTLEY: {userOutput}\n"
-			answerHistory+=f"{delimiterOutput}\n"
-			
-			fm+=f"\n{delimiterOutput}"
-			
-			print("Delimiter Complete, Getting New Response")
-			responseObj = getResponse(getFullPromptDelimiter(personality, context, prompt, answerHistory), model)
-			
-			fm+=f"\n{fullMessage}"
-			
-			yield mt.encode('utf-8')
-		else:
-			fm+=f"\n{fullMessage}"
-			print("Saving History")
-			saveHistory(prompt, fm, personalityName)
-			print("\n")
-			run = False
+					
+			else: yield content.encode('utf-8')  # <-- encode to bytes
+                    
+                
+                
+        if delimited:
+            
+            userOutput=fullMessage.split("<<<")[0]
+            
+            delimiterOutput = delimiterLogic(fullMessage)
+            
+            answerHistory+=f"WESTLEY: {userOutput}\n"
+            answerHistory+=f"{delimiterOutput}\n"
+            
+            fm+=f"\n{delimiterOutput}"
+            
+            print("Delimiter Complete, Getting New Response")
+            responseObj = getResponse(getFullPromptDelimiter(personality, context, prompt, answerHistory), model)
+            
+            fm+=f"\n{fullMessage}"
+            
+            yield b""
+        else:
+            fm+=f"\n{fullMessage}"
+            print("Saving History")
+            saveHistory(prompt, fm, personalityName)
+            print("\n")
+            break
 
     
 def saveHistory(prompt, response, personalityName):
